@@ -13,8 +13,7 @@ services:
   #   ports:
   #     - "3001:3001"
   #   environment:
-  #     - ES_URL=elasticsearch
-  #     - ES_PORT=9200
+  #     - ES_URL=http://elasticsearch1:9200
   #   networks:
   #     - msnet
 
