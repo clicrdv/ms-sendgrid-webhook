@@ -3,6 +3,9 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"os"
+
+	"github.com/clicrdv/ms-sendgrid-webhook/es"
 
 	"github.com/gin-gonic/gin"
 )
@@ -41,33 +44,37 @@ type SendgridEvent []struct {
 }
 
 func main() {
+	esClient := es.NewElasticsearchClient(os.Getenv("ES_URL"), "mail")
 	router := gin.Default()
-	router.POST("/v1/eventhook/", incomingWebhook)
+	router.POST("/v1/eventhook/", incomingWebhook(&esClient))
 	router.GET("/v1/mails", listMails)
 	router.GET("/v1/mail/:uuid", mailStates)
 	router.Run("0.0.0.0:3001")
 }
 
-func incomingWebhook(c *gin.Context) {
-	//body, _ := ioutil.ReadAll(c.Request.Body)
-	// fmt.Println("Headers:")
-	// fmt.Println(c.Request.Header)
-	//	fmt.Printf("%s", string(body))
-	// fmt.Println("EVENT RECEIVED : ")
-	var events SendgridEvent
-	if err := c.BindJSON(&events); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error":  "json decoding : " + err.Error(),
-			"status": http.StatusBadRequest,
-		})
-		fmt.Println(err.Error())
+func incomingWebhook(esClient *es.ElasticsearchClient) func(c *gin.Context) {
+	return func(c *gin.Context) {
+		//body, _ := ioutil.ReadAll(c.Request.Body)
+		// fmt.Println("Headers:")
+		// fmt.Println(c.Request.Header)
+		//	fmt.Printf("%s", string(body))
+		// fmt.Println("EVENT RECEIVED : ")
+		var events SendgridEvent
+		if err := c.BindJSON(&events); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error":  "json decoding : " + err.Error(),
+				"status": http.StatusBadRequest,
+			})
+			fmt.Println(err.Error())
+			return
+		}
+		for _, event := range events {
+			fmt.Printf("%+v\n", event)
+			esClient.StoreJson(event)
+		}
+		c.JSON(http.StatusOK, gin.H{"status": "ok"})
 		return
 	}
-	for _, event := range events {
-		fmt.Printf("%+v\n", event)
-	}
-	c.JSON(http.StatusOK, gin.H{"status": "ok"})
-	return
 }
 
 func listMails(c *gin.Context) {
