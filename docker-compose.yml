@@ -1,0 +1,78 @@
+version: '2.1'
+
+services:
+  msmail:
+    image: clicrdv/ms-mail:latest
+    ports:
+      - "50052:50052"
+    networks:
+      - msnet
+
+  # msfollowmail:
+  #   image: clicrdv/ms-sendgrid-webhook:latest
+  #   ports:
+  #     - "3001:3001"
+  #   environment:
+  #     - ES_URL=elasticsearch
+  #     - ES_PORT=9200
+  #   networks:
+  #     - msnet
+
+  elasticsearch1:
+    image: docker.elastic.co/elasticsearch/elasticsearch:5.6.1
+    container_name: elasticsearch1
+    environment:
+      - cluster.name=docker-cluster
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    mem_limit: 1g
+    volumes:
+      - esdata1:/usr/share/elasticsearch/data
+    ports:
+      - 9200:9200
+    networks:
+      - msnet
+
+  elasticsearch2:
+    image: docker.elastic.co/elasticsearch/elasticsearch:5.6.1
+    environment:
+      - cluster.name=docker-cluster
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - "discovery.zen.ping.unicast.hosts=elasticsearch1"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    mem_limit: 1g
+    volumes:
+      - esdata2:/usr/share/elasticsearch/data
+    networks:
+      - msnet
+
+  kibana:
+   image: docker.elastic.co/kibana/kibana:5.6.1
+   ports:
+    - "5601:5601"
+   networks:
+     - msnet
+   environment:
+     SERVER_NAME: localhost
+     ELASTICSEARCH_URL: http://elasticsearch1:9200
+
+volumes:
+  esdata1:
+    driver: "local"
+  esdata2:
+    driver: "local"
+
+networks:
+  msnet:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.24.0.0/24
