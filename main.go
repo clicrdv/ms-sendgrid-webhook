@@ -30,7 +30,7 @@ type SendgridEvent []struct {
 	Timestamp   int      `json:"timestamp"`
 	SMTPID      string   `json:"smtp-id"`
 	Event       string   `json:"event"`
-	Category    []string `json:"category"`
+	Category    []string `json:"category"` // trouver un moyen de gerer une ou n category
 	SgEventID   string   `json:"sg_event_id"`
 	SgMessageID string   `json:"sg_message_id"`
 	Response    string   `json:"response,omitempty"`

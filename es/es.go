@@ -30,10 +30,15 @@ func MailIndex() string {
 //NewElasticsearchClient allow to create an ElasticsearchClient
 func NewElasticsearchClient(URL string, index string) ElasticsearchClient {
 	// Create a client
-	client, err := elastic.NewClient()
-	elastic.SetMaxRetries(10)
+	client, err := elastic.NewClient(
+		elastic.SetMaxRetries(10),
+		elastic.SetSniff(false),
+		elastic.SetURL(URL),
+		elastic.SetBasicAuth("elastic", "changeme"),
+	)
+
 	fmt.Println("Sending message to ES : ", URL)
-	elastic.SetURL(URL)
+
 	if err != nil {
 		fmt.Println("Error while initializing Elasticsearch client : ", err.Error())
 	}
