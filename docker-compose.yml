@@ -2,13 +2,15 @@ version: '2.1'
 
 services:
   msmail:
-    image: clicrdv/ms-mail:0.1.1
+    image: clicrdv/ms-mail:0.1.3
     ports:
       - "3008:3008"
     networks:
       - msnet
     environment:
       - SENDGRID_API_KEY=${SENDGRID_API_KEY}
+      - LISTEN_ADDRESS=0.0.0.0:3008
+      - FOLLOW_MAIL_ADDRESS=docker.for.mac.localhost:50053
 
   # msfollowmail:
   #   image: clicrdv/ms-sendgrid-webhook:latest
@@ -21,6 +23,7 @@ services:
 
   elasticsearch1:
     image: docker.elastic.co/elasticsearch/elasticsearch:5.6.1
+    container_name: elasticsearch1
     environment:
       - cluster.name=docker-cluster
       - bootstrap.memory_lock=true
