@@ -12,7 +12,7 @@ import (
 
 const (
 	//ElasticsearchType designate the type put in messages
-	ElasticsearchType     = "wok_message"
+	ElasticsearchType     = "sendgrid_mail"
 	logstashIndexWildcard = "logstash-*"
 )
 
@@ -28,7 +28,7 @@ func MailIndex() string {
 }
 
 //NewElasticsearchClient allow to create an ElasticsearchClient
-func NewElasticsearchClient(URL string, index string) ElasticsearchClient {
+func NewElasticsearchClient(URL string, index string) *ElasticsearchClient {
 	// Create a client
 	client, err := elastic.NewClient(
 		elastic.SetMaxRetries(10),
@@ -43,7 +43,7 @@ func NewElasticsearchClient(URL string, index string) ElasticsearchClient {
 		fmt.Println("Error while initializing Elasticsearch client : ", err.Error())
 	}
 	client.CreateIndex(index).Do(context.TODO())
-	return ElasticsearchClient{Client: client, ESIndex: index}
+	return &ElasticsearchClient{Client: client, ESIndex: index}
 }
 
 //ForwardMessage is used to forward a message in elasticsearch
