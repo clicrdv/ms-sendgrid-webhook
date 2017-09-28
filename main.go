@@ -12,8 +12,8 @@ import (
 
 	"google.golang.org/grpc"
 
+	pb "github.com/clicrdv/ms-grpc-stubs/followservice"
 	"github.com/clicrdv/ms-sendgrid-webhook/es"
-	pb "github.com/clicrdv/ms-sendgrid-webhook/followservice"
 	"github.com/gin-gonic/gin"
 )
 
@@ -53,6 +53,8 @@ type SendgridEvent []struct {
 type GrpcServer struct{}
 
 func (s *GrpcServer) NotifySentMail(ctx context.Context, followMail *pb.ClicRdvFollowMail) (*pb.SendMailStatus, error) {
+	log.Print("Received GRPC Call")
+	log.Printf("Received arguments : %s, %s", followMail.GetEmail(), followMail.GetUuid())
 	return &pb.SendMailStatus{}, nil
 }
 
