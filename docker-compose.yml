@@ -2,11 +2,13 @@ version: '2.1'
 
 services:
   msmail:
-    image: clicrdv/ms-mail:latest
+    image: clicrdv/ms-mail:0.1.1
     ports:
-      - "50052:50052"
+      - "3008:3008"
     networks:
       - msnet
+    environment:
+      - SENDGRID_API_KEY=${SENDGRID_API_KEY}
 
   # msfollowmail:
   #   image: clicrdv/ms-sendgrid-webhook:latest
