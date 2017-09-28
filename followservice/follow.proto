@@ -9,7 +9,7 @@ option java_outer_classname = "ClicRdvFollowMailServiceProto";
 package followmailservice;
 
 service ClicRdvFollowMailService {
-  rpc SendMail(ClicRdvFollowMail) returns (SendMailStatus) {}
+  rpc NotifySentMail(ClicRdvFollowMail) returns (SendMailStatus) {}
 }
 
 message ClicRdvFollowMail {

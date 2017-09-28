@@ -2,11 +2,18 @@ package main
 
 import (
 	"fmt"
+	"log"
+	"net"
 	"net/http"
 	"os"
+	"sync"
+
+	context "golang.org/x/net/context"
+
+	"google.golang.org/grpc"
 
 	"github.com/clicrdv/ms-sendgrid-webhook/es"
-
+	pb "github.com/clicrdv/ms-sendgrid-webhook/followservice"
 	"github.com/gin-gonic/gin"
 )
 
@@ -43,13 +50,37 @@ type SendgridEvent []struct {
 	AsmGroupID  int      `json:"asm_group_id,omitempty"`
 }
 
+type GrpcServer struct{}
+
+func (s *GrpcServer) NotifySentMail(ctx context.Context, followMail *pb.ClicRdvFollowMail) (*pb.SendMailStatus, error) {
+	return &pb.SendMailStatus{}, nil
+}
+
 func main() {
-	esClient := es.NewElasticsearchClient(os.Getenv("ES_URL"), "mail")
-	router := gin.Default()
-	router.POST("/v1/eventhook/", incomingWebhook(&esClient))
-	router.GET("/v1/mails", listMails)
-	router.GET("/v1/mail/:uuid", mailStates)
-	router.Run("0.0.0.0:3001")
+	wg := &sync.WaitGroup{}
+	wg.Add(1)
+	go func() {
+		esClient := es.NewElasticsearchClient(os.Getenv("ES_URL"), "mail")
+		router := gin.Default()
+		router.POST("/v1/eventhook/", incomingWebhook(&esClient))
+		router.GET("/v1/mails", listMails)
+		router.GET("/v1/mail/:uuid", mailStates)
+		router.Run("0.0.0.0:3001")
+		wg.Done()
+	}()
+	wg.Add(1)
+	go func() {
+		log.Print("Starting microservice grpc listening on 50053")
+		lis, err := net.Listen("tcp", "localhost:50053")
+		if err != nil {
+			log.Fatalf("Failed to listen : %v", err)
+		}
+		grpcServer := grpc.NewServer()
+		pb.RegisterClicRdvFollowMailServiceServer(grpcServer, &GrpcServer{})
+		grpcServer.Serve(lis)
+		wg.Done()
+	}()
+	wg.Wait()
 }
 
 func incomingWebhook(esClient *es.ElasticsearchClient) func(c *gin.Context) {
